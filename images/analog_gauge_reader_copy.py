@@ -49,14 +49,7 @@ def calibrate_gauge(file_name, file_type):
 
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  # convert to gray
     # gray = cv2.GaussianBlur(gray, (5, 5), 0)
-    # gray = cv2.medianBlur(gray, 5)
-
-    # for testing, output gray image
-    #cv2.imwrite('%s-bw.%s' % (file_name, file_type), gray)
-
-    # detect circles
-    # restricting the search from 35-48% of the possible radii gives fairly good results across different samples.  Remember that
-    # these are pixel values which correspond to the possible radii search range.
+    gray = cv2.medianBlur(gray, 5)
 
     # th, red_thresh = cv2.threshold(r_channel, 170, 255, cv2.THRESH_BINARY_INV);
 
@@ -125,7 +118,7 @@ def calibrate_gauge(file_name, file_type):
     # units = input('Enter units: ')
 
     # for testing purposes: hardcode and comment out raw_inputs above
-    min_angle = 43
+    min_angle = 44
     max_angle = 315
     min_value = 0
     max_value = 16
@@ -141,14 +134,13 @@ def get_current_value(img, min_angle, max_angle, min_value, max_value, x, y, r, 
     gray2 = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     # Set threshold and maxValue
-    thresh = 53
-    maxValue = 255
+    thresh = 60
 
     center = (x, y)
     radius = r
 
     # apply thresholding which helps for finding lines
-    th, dst2 = cv2.threshold(gray2, thresh, maxValue, cv2.THRESH_BINARY_INV);
+    th, dst2 = cv2.threshold(gray2, thresh, 255, cv2.THRESH_BINARY_INV);
 
     # found Hough Lines generally performs better without Canny / blurring, though there were a couple exceptions where it would only work with Canny / blurring
     # dst2 = cv2.medianBlur(dst2, 5)
@@ -167,18 +159,18 @@ def get_current_value(img, min_angle, max_angle, min_value, max_value, x, y, r, 
 
     correct_end_point = (0, 0)
 
-    for i in range(int(max_angle - min_angle)):
-        angle_radians = math.radians(i + min_angle)
+
+    for angle in range(int(min_angle), int(max_angle)):
+        angle_radians = math.radians(angle)
         start_point = center
-        end_point = (
-            int(center[0] + radius * math.cos(angle_radians)), int(center[1] - radius * math.sin(angle_radians)))
+        end_point = find_point_on_circle(center_x=x, center_y=y, r=radius, angle_in_degrees=angle)
         line_pixels = cv2.line(np.zeros(image.shape), start_point, end_point, 1, 1)
         no_of_pixels = len(np.nonzero(cv2.bitwise_and(image, image, mask=np.uint8(line_pixels)))[0])
 
         # Update when we get maximum white pixels on line
         if no_of_pixels > max_pixels:
             max_pixels = no_of_pixels
-            needle_angle = i + min_angle
+            needle_angle = angle
             correct_end_point = end_point
 
     cv2.line(img, center, correct_end_point, (0, 255, 0), 2)
@@ -187,11 +179,28 @@ def get_current_value(img, min_angle, max_angle, min_value, max_value, x, y, r, 
     # cv2.imwrite('gauge-1-test.jpg', img)
     cv2.imwrite('%s-lines-2.%s' % (file_name, file_type), img)
 
-    return needle_angle
+    angle_range = max_angle - min_angle
+    start_to_needle_range = needle_angle - min_angle
+    value_range = max_value - min_value
 
+    measured_value = start_to_needle_range / angle_range * value_range + min_value
+
+    return measured_value
+
+def find_point_on_circle(center_x, center_y, r, angle_in_degrees):
+
+    angle_in_degrees *= -1
+
+    # convert angle from degrees to radians and adjust the starting point
+    angle_in_radians = math.radians(90-angle_in_degrees)
+
+    x = int(r * math.cos(angle_in_radians) + center_x)
+    y = int(r * math.sin(angle_in_radians) + center_y)
+
+    return x, y
 
 def main():
-    file_name = 'gauge-4'
+    file_name = 'gauge-3'
     file_type = 'png'
     # name the calibration image of your gauge 'gauge-#.jpg', for example 'gauge-5.jpg'.  It's written this way so you can easily try multiple images
     min_angle, max_angle, min_value, max_value, units, x, y, r = calibrate_gauge(file_name, file_type)
