@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Document</title>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
+</head>
+<body>
+    <h3>5er Reihe</h3>
+    <button onclick="evaluatePython()">Nächster Wert</button>
+    <img src="../analog-gauge-reader-working/gauge-4.png" alt="" width="300px">
+    <br />
+    <div id="output"></div>
+    <script>
+        let output = document.getElementById("output");
+        let pyodideReadyPromise = loadPyodide();
+        let multiplier = 0;
+    
+        async function evaluatePython() {
+            let pyodide = await pyodideReadyPromise;
+            multiplier += 1;
+            let code = `
+                def multiply_by_5(x):
+                    return x * 5
+
+                multiply_by_5(${multiplier})
+            `
+            try {
+                let result = pyodide.runPython(code);
+                output.innerHTML += "5 * " + multiplier.toString() + " = " + result.toString() + "<br>";
+            } catch (err) {
+                output.innerHTML = err;
+            }
+        }
+    </script>
+</body>
+</html>
