@@ -8,19 +8,131 @@
 </head>
 <body>
     <button onclick="evaluatePython()">Nächster Wert</button>
-    <img src="../analog-gauge-reader-working/gauge-4.png" alt="" width="300px">
+    <img id="image" src="../analog-gauge-reader-working/gauge-4.png" alt="" width="300px">
     <script type="text/javascript">
       async function main() {
         let pyodide = await loadPyodide();
         await pyodide.loadPackage("micropip");
+        await pyodide.loadPackage("matplotlib");
         const micropip = pyodide.pyimport("micropip");
         await micropip.install("opencv-python");
-        //await micropip.install("numpy as np");
-        //await micropip.install("from matplotlib import pyplot as plt");
+        await micropip.install("numpy");
+        await micropip.install("matplotlib-pyodide");
+
+         var img = document.getElementById('image');
+        var canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        canvas.getContext('2d').drawImage(img, 0, 0, img.width, img.height);
+        var imgData = canvas.getContext('2d').getImageData(0, 0, img.width, img.height);
 
         await pyodide.runPython(`
-        import opencv-python
-        print(opencv-python)
+        import cv2
+        import numpy as np
+        import math
+        from matplotlib import pyplot as plt
+
+        import os
+        print("Import successfull")
+
+        print("Files in current directory:")
+        print(os.listdir('../../../home'))
+
+        def process_image(imgData):
+            # convert the JavaScript ImageData array to a numpy array and reshape it
+            imgArray = np.array(imgData).reshape((imgData.height, imgData.width, 4))
+            # convert the image from RGBA to RGB
+            imgArray = cv2.cvtColor(imgArray, cv2.COLOR_RGBA2RGB)
+            # now you can use imgArray with OpenCV
+
+        def avg_circles(circles, b):
+            avg_x = 0
+            avg_y = 0
+            avg_r = 0
+            for i in range(b):
+                avg_x = avg_x + circles[0][i][0]
+                avg_y = avg_y + circles[0][i][1]
+                avg_r = avg_r + circles[0][i][2]
+            avg_x = int(avg_x / (b))
+            avg_y = int(avg_y / (b))
+            avg_r = int(avg_r / (b))
+            return avg_x, avg_y, avg_r
+
+
+        def dist_2_pts(x1, y1, x2, y2):
+            return np.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+
+        def find_point_on_circle(center_x, center_y, r, angle_in_degrees):
+            angle_in_degrees *= -1
+            angle_in_radians = math.radians(90-angle_in_degrees)
+
+            x = int(r * math.cos(angle_in_radians) + center_x)
+            y = int(r * math.sin(angle_in_radians) + center_y)
+
+            return x, y
+
+        def show_image(image):
+            img_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            plt.imshow(img_rgb)
+            plt.xticks([]), plt.yticks([])
+
+        img = process_image(${imgData})
+
+        height, width = img.shape[:2]
+
+        gray_image = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+        gray_blurred = cv2.medianBlur(gray_image, 5)
+
+        circles = cv2.HoughCircles(gray_blurred, cv2.HOUGH_GRADIENT, 1, 20, np.array([]), 100, 50, minRadius=int(height * 0.25), maxRadius=int(height * 0.5))
+
+        # average found circles, found it to be more accurate than trying to tune HoughCircles parameters to get just the right one
+        a, b, c = circles.shape
+        x, y, r = avg_circles(circles, b)
+
+        print(x, y, r)
+
+        min_angle = 44
+        max_angle = 315
+        min_value = 0
+        max_value = 16
+        units = "bar"
+
+        thresh = 60
+
+        center = (x, y)
+        radius = r
+
+        th, thresh_image = cv2.threshold(gray_image, thresh, 255, cv2.THRESH_BINARY_INV);
+
+        # Initializing variables
+        max_pixels = 0
+        needle_angle = 0
+        needle_end_point = (0, 0)
+
+        for angle in range(int(min_angle), int(max_angle)):
+            angle_radians = math.radians(angle)
+            start_point = center
+            end_point = find_point_on_circle(center_x=x, center_y=y, r=radius, angle_in_degrees=angle)
+            line_pixels = cv2.line(np.zeros(thresh_image.shape), start_point, end_point, 1, 1)
+            no_of_pixels = len(np.nonzero(cv2.bitwise_and(thresh_image, thresh_image, mask=np.uint8(line_pixels)))[0])
+
+            # Update when we get maximum white pixels on line
+            if no_of_pixels > max_pixels:
+                max_pixels = no_of_pixels
+                needle_angle = angle
+                needle_end_point = end_point
+
+        line_image = img.copy();
+        cv2.line(line_image, center, needle_end_point, (0, 255, 0), 2)
+
+        angle_range = max_angle - min_angle
+        start_to_needle_range = needle_angle - min_angle
+        value_range = max_value - min_value
+
+        measured_value = start_to_needle_range / angle_range * value_range + min_value
+
+        print ("Current reading: %s %s" %(round(measured_value, 1), units))
       `);
       }
       main();
