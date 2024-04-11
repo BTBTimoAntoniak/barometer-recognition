@@ -1,0 +1,145 @@
+[
+  {
+    "name": "gauge1.jpeg",
+    "radius" : {
+      "min": 454,
+      "max": 555
+    },
+    "center" : {
+      "x": 1192,
+      "y": 732
+    }
+  },
+  {
+    "name": "gauge2.jpeg",
+    "radius" : {
+      "min": 464,
+      "max": 558
+    },
+    "center" : {
+      "x": 1087,
+      "y": 894
+    }
+  },
+  {
+    "name": "gauge3.jpeg",
+    "radius" : {
+      "min": 430,
+      "max": 508
+    },
+    "center" : {
+      "x": 1150,
+      "y": 853
+    }
+  },
+  {
+    "name": "gauge4.jpeg",
+    "radius" : {
+      "min": 459,
+      "max": 558
+    },
+    "center" : {
+      "x": 1113,
+      "y": 847
+    }
+  },
+  {
+    "name": "gauge5.jpeg",
+    "radius" : {
+      "min": 465,
+      "max": 538
+    },
+    "center" : {
+      "x": 1109,
+      "y": 873
+    }
+  },
+  {
+    "name": "gauge6.jpeg",
+    "radius" : {
+      "min": 458,
+      "max": 547
+    },
+    "center" : {
+      "x": 1084,
+      "y": 885
+    }
+  },
+  {
+    "name": "gauge7.jpeg",
+    "radius" : {
+      "min": 425,
+      "max": 500
+    },
+    "center" : {
+      "x": 1135,
+      "y": 884
+    }
+  },
+  {
+    "name": "gauge8.jpeg",
+    "radius" : {
+      "min": 455,
+      "max": 530
+    },
+    "center" : {
+      "x": 1256,
+      "y": 778
+    }
+  },
+  {
+    "name": "gauge9.jpeg",
+    "radius" : {
+      "min": 463,
+      "max": 556
+    },
+    "center" : {
+      "x": 1238,
+      "y": 785
+    }
+  },
+  {
+    "name": "gauge10.jpeg",
+    "radius" : {
+      "min": 448,
+      "max": 532
+    },
+    "center" : {
+      "x": 1192,
+      "y": 732
+    }
+  },
+  {
+    "name": "gauge11.jpeg",
+    "radius" : {
+      "min": 448,
+      "max": 569
+    },
+    "center" : {
+      "x": 1138,
+      "y": 836
+    }
+  },
+  {
+    "name": "gauge12.jpeg",
+    "radius" : {
+      "min": 254,
+      "max": 304
+    },
+    "center" : {
+      "x": 397,
+      "y": 410
+    }
+  },
+  {
+    "name": "gauge13.png",
+    "radius" : {
+      "min": 240,
+      "max": 275
+    },
+    "center" : {
+      "x": 370,
+      "y": 398
+    }
+  }
+]
